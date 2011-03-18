@@ -160,12 +160,7 @@ recomment_forms_2(C, [N | Ns] = Nodes, Insert) ->
     Min = node_min(N),
     Max = node_max(N),
     Delta = comment_delta(Text),
-    Trailing = 
-	case Ns of
-	    [] -> true;
-	    [Next | _] -> L < node_min(Next) - 2
-	end,
-    if L > Max + 1 ; L =:= Max + 1, not Trailing ->
+    if L > Max ->
 	    [N | recomment_forms_2(C, Ns, Insert)];
        L + Delta < Min - 1 ->
 	    %% At least one empty line between the current form
