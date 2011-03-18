@@ -134,7 +134,7 @@ fi
 
 #echo $BPATH
 for BP in $BPATH_LIST; do
-    for verdir in "sdk v2.0" "sdk v3.5" "v6.0A"; do
+    for verdir in "sdk v2.0" "sdk v3.5" "v6.0A" "v7.0" "v7.1"; do
 	BPATH=$BP
 	fail=false
 	for x in $verdir bootstrapper packages vcredist_x86 vcredist_x86.exe; do
@@ -156,6 +156,18 @@ for BP in $BPATH_LIST; do
 	exit 0
     fi
 done
+
+# shortcut for locating vcredist_x86.exe is to put it into $ERL_TOP
+if [ -f $ERL_TOP/vcredist_x86.exe ]; then
+    echo $ERL_TOP/vcredist_x86.exe
+    exit 0
+fi
+
+# or $ERL_TOP/.. to share across multiple builds
+if [ -f $ERL_TOP/../vcredist_x86.exe ]; then
+    echo $ERL_TOP/../vcredist_x86.exe
+    exit 0
+fi
 
 echo "Failed to locate vcredist_x86.exe because directory structure was unexpected" >&2
 exit 3
