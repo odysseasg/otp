@@ -57,6 +57,7 @@
 #define FILE_FADVISE            31
 #define FILE_SENDFILE           32
 #define FILE_EXISTS             33
+#define FILE_FALLOCATE          34
 
 /* Return codes */
 
@@ -403,6 +404,9 @@ struct t_data
 	    size_t count;
 	    size_t written;
 	} sendfile;
+  struct {
+	    Sint64 newFileLength;
+	} fallocate;
     } c;
     char b[1];
 };
@@ -1748,6 +1752,15 @@ static void invoke_sendfile(void *data)
 	d->again = 0;
     }
 }
+static void invoke_fallocate(void *data)
+{
+    struct t_data *d = (struct t_data *) data;
+    int fd = (int) d->fd;
+    off_t newFileLength = (off_t) d->c.fallocate.newFileLength;
+
+    d->again = 0;
+    d->result_ok = efile_fallocate(&d->errInfo, fd, newFileLength);
+}
 
 static void free_readdir(void *data)
 {
@@ -2040,6 +2053,7 @@ file_async_ready(ErlDrvData e, ErlDrvThreadData data)
       case FILE_WRITE_INFO:
       case FILE_FADVISE:
       case FILE_EXISTS:
+      case FILE_FALLOCATE:
 	reply(desc, d->result_ok, &d->errInfo);
 	free_data(data);
 	break;
@@ -2525,6 +2539,19 @@ file_output(ErlDrvData e, char* buf, int count)
 	    d->c.sendfile.written = 0;
 	    goto done;
 	}
+
+    case FILE_FALLOCATE:
+    {
+        d = EF_SAFE_ALLOC(sizeof(struct t_data));
+
+        d->fd = fd;
+        d->command = command;
+        d->invoke = invoke_fallocate;
+        d->free = free_data;
+        d->level = 2;
+        d->c.fallocate.newFileLength = get_int64((uchar*) buf);
+        goto done;
+    }
 
     }
 
